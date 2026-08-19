@@ -1,122 +1,321 @@
-# Dynamic AI Chatbot
+# 🤖 Dynamic AI Chatbot
 
-A modern web-based chatbot application built with Flask backend and vanilla JavaScript frontend, featuring advanced natural language processing capabilities.
+A modern web-based AI chatbot built using **Python, Flask, JavaScript, and Google Gemini API**. The application provides conversational AI with conversation memory, intent recognition, sentiment analysis, multilingual support, customizable settings, and an interactive analytics dashboard.
 
-## Features
+## ✨ Features
 
-- **Real-time Chat Interface**: Interactive conversation system with typing indicators
-- **Analytics Dashboard**: Track conversations, response times, and sentiment analysis
-- **Modern UI Design**: Clean, responsive interface with light/dark theme support
-- **Multi-language Support**: English, Hindi, and Hinglish language options
-- **Customizable Settings**: Adjust response creativity, themes, and chat features
-- **Mobile Responsive**: Works seamlessly on desktop and mobile devices
-- **Data Export**: Export chat history and analytics data
+* 🤖 **AI-Powered Conversations** using Google Gemini API
+* 🧠 **Conversation Memory** for maintaining context across messages
+* 🎯 **Intent Recognition** for identifying user message categories
+* 😊 **Sentiment Analysis** with positive, negative, and neutral classification
+* 🌐 **Multi-language Support** with English, Hindi, and Hinglish options
+* 📊 **Analytics Dashboard** for monitoring chatbot performance
+* 📈 **Response Time Tracking** and API success-rate monitoring
+* 🌓 **Light/Dark/Auto Theme**
+* ⚙️ **Customizable Settings**
+* 💾 **Chat History Export** in JSON format
+* 🗑️ **Clear Conversation Memory**
+* 📱 **Responsive Web Interface**
+* ⚡ **Typing Indicator** for better user experience
+* 🛡️ **Error Handling and Fallback Responses**
 
-## Project Structure
+## 🛠️ Technologies Used
 
-```
-dynamic-ai-chatbot/
-├── server.py              # Flask backend server
+### Backend
+
+* Python
+* Flask
+* Flask-CORS
+* Google Gemini API
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript (ES6+)
+* Chart.js
+
+### Development Tools
+
+* Git
+* GitHub
+* Python Virtual Environment
+
+## 📁 Project Structure
+
+```text
+ai-chatbot/
+│
+├── server.py              # Flask backend and Gemini API integration
+├── run.py                 # Application runner
 ├── requirements.txt       # Python dependencies
-├── static/
-│   ├── index.html        # Main frontend HTML
-│   ├── style.css         # Stylesheet
-│   └── app.js           # JavaScript functionality
-└── README.md            # Project documentation
+├── test_api.py            # API testing
+├── README.md              # Project documentation
+├── .gitignore             # Git ignored files
+│
+└── static/
+    ├── index.html         # Chatbot user interface
+    ├── style.css          # Application styling
+    └── app.js             # Frontend functionality
 ```
 
-## Setup Instructions
+## ⚙️ Requirements
 
-### Prerequisites
+* Python 3.10+
+* Git
+* Internet connection
+* Google Gemini API key
 
-- Python 3.7 or higher
-- Internet connection for API access
+## 🚀 Installation
 
-### Installation
+### 1. Clone the Repository
 
-1. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+git clone https://github.com/balasai650/ai-chatbot.git
+```
 
-2. **Run the Application**
-   ```bash
-   python server.py
-   ```
+### 2. Open the Project Directory
 
-3. **Access the Application**
-   Open your web browser and navigate to `http://localhost:5000`
+```bash
+cd ai-chatbot
+```
 
-## Usage
+### 3. Create a Virtual Environment
 
-### Chat Interface
-- Type messages in the input box and press Enter or click Send
-- Use quick reply buttons for common queries
-- View message timestamps and sentiment indicators
-- Clear chat history or export conversations
+```bash
+python -m venv venv
+```
 
-### Analytics Dashboard
-- View conversation statistics and metrics
-- Monitor API success rates and response times
-- Analyze sentiment trends with interactive charts
-- Track session information in real-time
+### 4. Activate the Virtual Environment
 
-### Settings Panel
-- Switch between light/dark themes or use auto mode
-- Select preferred language (English/Hindi/Hinglish)
-- Adjust AI response creativity with temperature control
-- Toggle chat features like timestamps and sentiment analysis
+#### Windows PowerShell
 
-## Technical Implementation
+```powershell
+.\venv\Scripts\Activate.ps1
+```
 
-### Backend (Flask)
-- RESTful API endpoints for chat functionality
-- Secure API integration with error handling
-- Static file serving and routing
-- CORS enabled for cross-origin requests
+### 5. Install Dependencies
 
-### Frontend (Vanilla JavaScript)
-- Modern ES6+ JavaScript without external frameworks
-- Responsive CSS with CSS custom properties
-- Chart.js integration for analytics visualization
-- Local storage for settings persistence
+```bash
+pip install -r requirements.txt
+```
 
-### Features
-- **Sentiment Analysis**: Real-time emotion detection in messages
-- **Context Awareness**: Maintains conversation history and context
-- **Performance Monitoring**: Tracks response times and API metrics
-- **Export Functionality**: Download chat data in JSON format
-- **Theme System**: Dynamic light/dark mode switching
+## 🔑 API Configuration
 
-## Browser Compatibility
+The chatbot requires a **Google Gemini API key**.
 
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
+Set the API key as an environment variable.
 
-## API Configuration
+### Windows PowerShell
 
-The application uses external language model APIs for natural language processing. API configuration is handled in the server.py file with appropriate error handling and fallback responses.
+```powershell
+$env:GEMINI_API_KEY="YOUR_API_KEY"
+```
 
-## Development
+Verify the configuration:
 
-### Code Structure
-- **Modular Design**: Separated concerns between UI, API, and data management
-- **Event-Driven Architecture**: DOM event handling with proper cleanup
-- **Responsive Layout**: CSS Grid and Flexbox for modern layouts
-- **Progressive Enhancement**: Works with JavaScript disabled (basic functionality)
+```powershell
+$env:GEMINI_API_KEY
+```
 
-### Performance Optimizations
-- Efficient DOM manipulation with minimal reflows
-- Debounced input handling for smooth user experience
-- Lazy loading of analytics charts
-- Optimized CSS with minimal specificity conflicts
+> ⚠️ Never upload your actual API key to GitHub.
 
-## License
+## ▶️ Running the Application
 
-This project is for educational purposes.
+Start the Flask server:
 
-## Support
+```bash
+python server.py
+```
 
-For technical support or questions about implementation, please refer to the source code comments or contact the development team.
+The application will run at:
+
+```text
+http://127.0.0.1:5000
+```
+
+Open the address in your browser to use the chatbot.
+
+## 💬 Chat Interface
+
+The chatbot allows users to:
+
+* Send natural-language questions
+* Receive AI-generated responses
+* Continue conversations using previous context
+* View message timestamps
+* View sentiment indicators
+* Use quick-reply options
+* Clear conversation history
+* Export chat history
+
+## 🧠 Conversation Memory
+
+The backend maintains conversation history during the active session.
+
+Example:
+
+```text
+User: My name is Sai.
+
+AI: Nice to meet you, Sai!
+
+User: What is my name?
+
+AI: Your name is Sai.
+```
+
+This allows the chatbot to understand follow-up questions and maintain conversational context.
+
+## 🎯 Intent Recognition
+
+The chatbot identifies common user intents such as:
+
+* Greeting
+* Farewell
+* Gratitude
+* Coding
+* Weather
+* Entertainment
+* Information
+* General conversation
+
+The detected intent is included in the context provided to the AI model.
+
+## 😊 Sentiment Analysis
+
+User messages are analyzed and classified into:
+
+* 😊 Positive
+* 😔 Negative
+* 😐 Neutral
+
+The detected sentiment is displayed in the chat interface and summarized in the analytics dashboard.
+
+## 🌐 Multi-language Support
+
+The chatbot provides language options including:
+
+* English
+* Hindi
+* Hinglish
+
+The selected language is included in the AI response instructions so that responses can be generated in the requested language.
+
+## 📊 Analytics Dashboard
+
+The dashboard provides chatbot performance information.
+
+### Conversation Metrics
+
+* Total conversations
+* Total messages
+* Average response time
+* API success rate
+
+### Sentiment Analysis
+
+Displays the distribution of:
+
+* Positive messages
+* Negative messages
+* Neutral messages
+
+### Response Time Trend
+
+Displays recent AI response times using interactive charts.
+
+### Session Information
+
+Shows:
+
+* Number of messages
+* Current session sentiment
+* Session duration
+* API calls
+
+### Recent Topics
+
+Displays topics detected from recent user messages.
+
+## ⚙️ Settings
+
+The settings panel provides controls for:
+
+* Language selection
+* AI response temperature
+* Light/Dark/Auto theme
+* Message timestamps
+* Sentiment analysis
+* Conversation context memory
+
+## 🛡️ Error Handling
+
+The application includes error handling for:
+
+* Network failures
+* API failures
+* Invalid API responses
+* Missing API configuration
+* Empty user messages
+
+Fallback responses are displayed when the AI service is temporarily unavailable.
+
+## 🧪 Testing
+
+The project was tested for:
+
+* Chat message processing
+* Gemini API communication
+* Conversation memory
+* Name/context recall
+* Intent recognition
+* Sentiment analysis
+* Language selection
+* Theme switching
+* Analytics dashboard
+* Response-time tracking
+* Chat history export
+* Clear conversation functionality
+* API error handling
+
+## 🔐 Security
+
+Sensitive configuration files and development files are excluded from Git using `.gitignore`.
+
+The following files and folders are intentionally not uploaded:
+
+```text
+venv/
+.env
+__pycache__/
+*.pyc
+```
+
+API keys should always be stored using environment variables rather than directly inside the source code.
+
+## 📌 Future Improvements
+
+Possible future enhancements include:
+
+* User authentication
+* Persistent database-based conversation storage
+* Voice input and output
+* Advanced NLP-based sentiment analysis
+* Conversation search
+* Cloud deployment
+* User-specific chat history
+* More language options
+* Advanced analytics and reporting
+
+## 🎓 Project Purpose
+
+This project was developed as an educational AI application to demonstrate the integration of:
+
+**Artificial Intelligence + Natural Language Processing + Web Development + Data Analytics**
+
+It demonstrates how a conversational AI system can be developed using a Flask backend, JavaScript frontend, and a generative AI model.
+
+## 📄 License
+
+This project is developed for educational purposes.
