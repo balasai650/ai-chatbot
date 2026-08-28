@@ -1,15 +1,23 @@
+// ============================================================
+// DYNAMIC AI CHATBOT - app.js
+// ============================================================
+
 const GEMINI_CONFIG = {
-    apiEndpoint: '/chat',
+    apiEndpoint: "/chat",
     maxTokens: 1000,
     temperature: 0.7
 };
 
+// ============================================================
+// APPLICATION STATE
+// ============================================================
+
 const appState = {
-    currentSection: 'chat',
+    currentSection: "chat",
 
     currentConversation: {
         messages: [],
-        sentiment: 'neutral',
+        sentiment: "neutral",
         topics: [],
         startTime: Date.now()
     },
@@ -30,14 +38,20 @@ const appState = {
     },
 
     settings: {
-        theme: 'auto',
-        language: 'en',
+        theme: "auto",
+        language: "en",
         temperature: 0.7,
         showTimestamps: true,
         enableSentiment: true,
         contextMemory: true
-    }
+    },
+
+    currentUser: null
 };
+
+// ============================================================
+// FALLBACK RESPONSES
+// ============================================================
 
 const fallbackResponses = {
     apiError: [
@@ -57,246 +71,649 @@ const fallbackResponses = {
     ]
 };
 
+// ============================================================
+// DOM ELEMENTS
+// ============================================================
+
 const elements = {
     messageInput: null,
     sendBtn: null,
     chatMessages: null,
     typingIndicator: null,
     charCount: null,
+
     quickReplies: [],
     navItems: [],
     mobileNavItems: [],
     contentSections: [],
+
     themeToggle: null,
     themeSelect: null,
+
     apiStatus: null,
+
     sessionMessages: null,
     sessionSentiment: null,
     sessionDuration: null,
     apiCalls: null,
-    recentTopics: null
+    recentTopics: null,
+
+    loggedInUser: null,
+
+    logoutBtn: null,
+    sidebarLogoutBtn: null,
+
+    totalConversations: null,
+    totalMessages: null,
+    avgResponseTime: null,
+    apiSuccessRate: null
 };
 
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('AI Chatbot: Initializing...');
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("AI Chatbot: Initializing...");
 
     initializeElements();
-    initializeApp();
+
+    initializeApplication();
+
     setupEventListeners();
-    updateAnalytics();
-    updateSessionInfo();
+
+    checkCurrentUser();
+
     startSessionTimer();
+
     updateApiStatus(true);
 
-    console.log('AI Chatbot: Ready');
+    console.log("AI Chatbot: Ready");
 });
 
+// ============================================================
+// FIND HTML ELEMENTS
+// ============================================================
+
 function initializeElements() {
-    elements.messageInput = document.getElementById('messageInput');
-    elements.sendBtn = document.getElementById('sendBtn');
-    elements.chatMessages = document.getElementById('chatMessages');
-    elements.typingIndicator = document.getElementById('typingIndicator');
-    elements.charCount = document.getElementById('charCount');
+    elements.messageInput =
+        document.getElementById("messageInput");
 
-    elements.quickReplies = document.querySelectorAll('.quick-reply');
-    elements.navItems = document.querySelectorAll('.nav-item');
-    elements.mobileNavItems = document.querySelectorAll('.mobile-nav-item');
-    elements.contentSections = document.querySelectorAll('.content-section');
+    elements.sendBtn =
+        document.getElementById("sendBtn");
 
-    elements.themeToggle = document.getElementById('themeToggle');
-    elements.themeSelect = document.getElementById('themeSelect');
+    elements.chatMessages =
+        document.getElementById("chatMessages");
 
-    elements.apiStatus = document.getElementById('apiStatus');
+    elements.typingIndicator =
+        document.getElementById("typingIndicator");
 
-    elements.sessionMessages = document.getElementById('sessionMessages');
-    elements.sessionSentiment = document.getElementById('sessionSentiment');
-    elements.sessionDuration = document.getElementById('sessionDuration');
-    elements.apiCalls = document.getElementById('apiCalls');
-    elements.recentTopics = document.getElementById('recentTopics');
+    elements.charCount =
+        document.getElementById("charCount");
+
+    elements.quickReplies =
+        document.querySelectorAll(".quick-reply");
+
+    elements.navItems =
+        document.querySelectorAll(".nav-item");
+
+    elements.mobileNavItems =
+        document.querySelectorAll(".mobile-nav-item");
+
+    elements.contentSections =
+        document.querySelectorAll(".content-section");
+
+    elements.themeToggle =
+        document.getElementById("themeToggle");
+
+    elements.themeSelect =
+        document.getElementById("themeSelect");
+
+    elements.apiStatus =
+        document.getElementById("apiStatus");
+
+    elements.sessionMessages =
+        document.getElementById("sessionMessages");
+
+    elements.sessionSentiment =
+        document.getElementById("sessionSentiment");
+
+    elements.sessionDuration =
+        document.getElementById("sessionDuration");
+
+    elements.apiCalls =
+        document.getElementById("apiCalls");
+
+    elements.recentTopics =
+        document.getElementById("recentTopics");
+
+    elements.loggedInUser =
+        document.getElementById("loggedInUser");
+
+    elements.logoutBtn =
+        document.getElementById("logoutBtn");
+
+    elements.sidebarLogoutBtn =
+        document.getElementById("sidebarLogoutBtn");
+
+    elements.totalConversations =
+        document.getElementById("totalConversations");
+
+    elements.totalMessages =
+        document.getElementById("totalMessages");
+
+    elements.avgResponseTime =
+        document.getElementById("avgResponseTime");
+
+    elements.apiSuccessRate =
+        document.getElementById("apiSuccessRate");
 }
 
-function initializeApp() {
+// ============================================================
+// INITIALIZE APPLICATION
+// ============================================================
+
+function initializeApplication() {
     if (!elements.chatMessages) {
-        console.error('chatMessages element not found');
+        console.error("chatMessages element not found.");
         return;
     }
 
     const welcomeMessage = {
         id: Date.now(),
-        text: "Hello! I'm your AI Assistant. I can help you with any questions, provide detailed explanations, assist with problems, and engage in meaningful conversations. How can I help you today?",
-        sender: 'bot',
+        text:
+            "Hello! I'm your AI Assistant. I can help you with questions, explanations, coding, problems, and general conversations. How can I help you today?",
+        sender: "bot",
         timestamp: new Date(),
-        sentiment: 'positive',
+        sentiment: "positive",
         isWelcome: true
     };
 
-    appState.currentConversation.messages = [welcomeMessage];
+    appState.currentConversation.messages = [
+        welcomeMessage
+    ];
 
     renderMessage(welcomeMessage);
+
     updateAnalytics();
+
     updateSessionInfo();
+
+    applyTheme();
 }
 
-function setupEventListeners() {
-    if (elements.messageInput) {
-        elements.messageInput.addEventListener('input', handleInputChange);
-        elements.messageInput.addEventListener('keydown', handleKeyPress);
+// ============================================================
+// CURRENT USER
+// ============================================================
+
+async function checkCurrentUser() {
+    try {
+        const response = await fetch(
+            "/api/current-user",
+            {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            console.warn(
+                "Could not check current user."
+            );
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!data.loggedIn) {
+            window.location.href = "/login";
+            return;
+        }
+
+        appState.currentUser = data.username;
+
+        if (elements.loggedInUser) {
+            elements.loggedInUser.textContent =
+                data.username;
+        }
+
+        console.log(
+            "Logged in user:",
+            data.username
+        );
+
+    } catch (error) {
+        console.error(
+            "Current user check failed:",
+            error
+        );
     }
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+
+function setupEventListeners() {
+
+    // --------------------------------------------------------
+    // MESSAGE INPUT
+    // --------------------------------------------------------
+
+    if (elements.messageInput) {
+
+        elements.messageInput.addEventListener(
+            "input",
+            handleInputChange
+        );
+
+        elements.messageInput.addEventListener(
+            "keydown",
+            handleKeyPress
+        );
+    }
+
+    // --------------------------------------------------------
+    // SEND BUTTON
+    // --------------------------------------------------------
 
     if (elements.sendBtn) {
-        elements.sendBtn.addEventListener('click', sendMessage);
+
+        elements.sendBtn.addEventListener(
+            "click",
+            function (event) {
+                event.preventDefault();
+                sendMessage();
+            }
+        );
     }
 
-    elements.quickReplies.forEach(function (button) {
-        button.addEventListener('click', function () {
-            const message = button.getAttribute('data-message');
+    // --------------------------------------------------------
+    // QUICK REPLIES
+    // --------------------------------------------------------
 
-            if (!message || !elements.messageInput) {
-                return;
-            }
+    elements.quickReplies.forEach(
+        function (button) {
 
-            elements.messageInput.value = message;
+            button.addEventListener(
+                "click",
+                function () {
 
-            handleInputChange({
-                target: elements.messageInput
-            });
+                    const message =
+                        button.getAttribute(
+                            "data-message"
+                        );
 
-            sendMessage();
-        });
-    });
+                    if (
+                        !message ||
+                        !elements.messageInput
+                    ) {
+                        return;
+                    }
 
-    elements.navItems.forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
+                    elements.messageInput.value =
+                        message;
 
-            const section = button.getAttribute('data-section');
+                    handleInputChange({
+                        target:
+                            elements.messageInput
+                    });
 
-            if (section) {
-                switchSection(section);
-            }
-        });
-    });
+                    sendMessage();
+                }
+            );
+        }
+    );
 
-    elements.mobileNavItems.forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
+    // --------------------------------------------------------
+    // DESKTOP NAVIGATION
+    // --------------------------------------------------------
 
-            const section = button.getAttribute('data-section');
+    elements.navItems.forEach(
+        function (button) {
 
-            if (section) {
-                switchSection(section);
-            }
-        });
-    });
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    const section =
+                        button.getAttribute(
+                            "data-section"
+                        );
+
+                    if (section) {
+                        switchSection(section);
+                    }
+                }
+            );
+        }
+    );
+
+    // --------------------------------------------------------
+    // MOBILE NAVIGATION
+    // --------------------------------------------------------
+
+    elements.mobileNavItems.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    const section =
+                        button.getAttribute(
+                            "data-section"
+                        );
+
+                    if (section) {
+                        switchSection(section);
+                    }
+                }
+            );
+        }
+    );
+
+    // --------------------------------------------------------
+    // THEME
+    // --------------------------------------------------------
 
     if (elements.themeToggle) {
-        elements.themeToggle.addEventListener('click', toggleTheme);
+
+        elements.themeToggle.addEventListener(
+            "click",
+            toggleTheme
+        );
     }
 
     if (elements.themeSelect) {
-        elements.themeSelect.addEventListener('change', function (event) {
-            appState.settings.theme = event.target.value;
-            applyTheme();
-        });
+
+        elements.themeSelect.addEventListener(
+            "change",
+            function (event) {
+
+                appState.settings.theme =
+                    event.target.value;
+
+                applyTheme();
+            }
+        );
     }
+
+    // --------------------------------------------------------
+    // SETTINGS
+    // --------------------------------------------------------
 
     setupSettingsListeners();
+
+    // --------------------------------------------------------
+    // LOGOUT
+    // --------------------------------------------------------
+
+    if (elements.logoutBtn) {
+
+        elements.logoutBtn.addEventListener(
+            "click",
+            logoutUser
+        );
+    }
+
+    if (elements.sidebarLogoutBtn) {
+
+        elements.sidebarLogoutBtn.addEventListener(
+            "click",
+            logoutUser
+        );
+    }
 }
+
+// ============================================================
+// SETTINGS LISTENERS
+// ============================================================
 
 function setupSettingsListeners() {
-    const languageSelect = document.getElementById('languageSelect');
-    const temperatureSlider = document.getElementById('temperatureSlider');
-    const temperatureValue = document.getElementById('temperatureValue');
 
-    const showTimestamps = document.getElementById('showTimestamps');
-    const enableSentiment = document.getElementById('enableSentiment');
-    const contextMemory = document.getElementById('contextMemory');
+    const languageSelect =
+        document.getElementById(
+            "languageSelect"
+        );
 
-    const exportChat = document.getElementById('exportChat');
-    const clearChat = document.getElementById('clearChat');
+    const temperatureSlider =
+        document.getElementById(
+            "temperatureSlider"
+        );
+
+    const temperatureValue =
+        document.getElementById(
+            "temperatureValue"
+        );
+
+    const showTimestamps =
+        document.getElementById(
+            "showTimestamps"
+        );
+
+    const enableSentiment =
+        document.getElementById(
+            "enableSentiment"
+        );
+
+    const contextMemory =
+        document.getElementById(
+            "contextMemory"
+        );
+
+    const exportChat =
+        document.getElementById(
+            "exportChat"
+        );
+
+    const clearChat =
+        document.getElementById(
+            "clearChat"
+        );
+
+    // --------------------------------------------------------
+    // LANGUAGE
+    // --------------------------------------------------------
 
     if (languageSelect) {
-        languageSelect.addEventListener('change', function (event) {
-            appState.settings.language = event.target.value;
-        });
+
+        languageSelect.addEventListener(
+            "change",
+            function (event) {
+
+                appState.settings.language =
+                    event.target.value;
+            }
+        );
     }
+
+    // --------------------------------------------------------
+    // TEMPERATURE
+    // --------------------------------------------------------
 
     if (temperatureSlider) {
-        temperatureSlider.addEventListener('input', function (event) {
-            const value = parseFloat(event.target.value);
 
-            if (!Number.isNaN(value)) {
-                appState.settings.temperature = value;
-                GEMINI_CONFIG.temperature = value;
+        temperatureSlider.addEventListener(
+            "input",
+            function (event) {
 
-                if (temperatureValue) {
-                    temperatureValue.textContent = value.toFixed(1);
+                const value =
+                    parseFloat(
+                        event.target.value
+                    );
+
+                if (!Number.isNaN(value)) {
+
+                    appState.settings.temperature =
+                        value;
+
+                    GEMINI_CONFIG.temperature =
+                        value;
+
+                    if (temperatureValue) {
+
+                        temperatureValue.textContent =
+                            value.toFixed(1);
+                    }
                 }
             }
-        });
+        );
     }
+
+    // --------------------------------------------------------
+    // TIMESTAMPS
+    // --------------------------------------------------------
 
     if (showTimestamps) {
-        showTimestamps.addEventListener('change', function (event) {
-            appState.settings.showTimestamps = event.target.checked;
-            rerenderMessages();
-        });
+
+        showTimestamps.addEventListener(
+            "change",
+            function (event) {
+
+                appState.settings.showTimestamps =
+                    event.target.checked;
+
+                rerenderMessages();
+            }
+        );
     }
+
+    // --------------------------------------------------------
+    // SENTIMENT
+    // --------------------------------------------------------
 
     if (enableSentiment) {
-        enableSentiment.addEventListener('change', function (event) {
-            appState.settings.enableSentiment = event.target.checked;
-            rerenderMessages();
-        });
+
+        enableSentiment.addEventListener(
+            "change",
+            function (event) {
+
+                appState.settings.enableSentiment =
+                    event.target.checked;
+
+                rerenderMessages();
+            }
+        );
     }
+
+    // --------------------------------------------------------
+    // CONTEXT MEMORY
+    // --------------------------------------------------------
 
     if (contextMemory) {
-        contextMemory.addEventListener('change', function (event) {
-            appState.settings.contextMemory = event.target.checked;
-        });
+
+        contextMemory.addEventListener(
+            "change",
+            function (event) {
+
+                appState.settings.contextMemory =
+                    event.target.checked;
+            }
+        );
     }
+
+    // --------------------------------------------------------
+    // EXPORT
+    // --------------------------------------------------------
 
     if (exportChat) {
-        exportChat.addEventListener('click', exportChatHistory);
+
+        exportChat.addEventListener(
+            "click",
+            exportChatHistory
+        );
     }
 
+    // --------------------------------------------------------
+    // CLEAR CHAT
+    // --------------------------------------------------------
+
     if (clearChat) {
-        clearChat.addEventListener('click', clearChatHistory);
+
+        clearChat.addEventListener(
+            "click",
+            clearChatHistory
+        );
     }
 }
 
+// ============================================================
+// INPUT CHANGE
+// ============================================================
+
 function handleInputChange(event) {
+
     const input = event.target;
 
     if (!input || !elements.charCount) {
         return;
     }
 
-    let length = input.value.length;
+    let length =
+        input.value.length;
 
     if (length > 1000) {
-        input.value = input.value.substring(0, 1000);
+
+        input.value =
+            input.value.substring(
+                0,
+                1000
+            );
+
         length = 1000;
     }
 
-    elements.charCount.textContent = length + '/1000';
+    elements.charCount.textContent =
+        length + "/1000";
 }
 
+// ============================================================
+// ENTER KEY
+// ============================================================
+
 function handleKeyPress(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
+
+    if (
+        event.key === "Enter" &&
+        !event.shiftKey
+    ) {
+
         event.preventDefault();
+
         sendMessage();
     }
 }
 
+// ============================================================
+// SEND MESSAGE
+// ============================================================
+
 async function sendMessage() {
+
     if (!elements.messageInput) {
         return;
     }
 
-    const messageText = elements.messageInput.value.trim();
+    const messageText =
+        elements.messageInput.value.trim();
 
     if (!messageText) {
+        return;
+    }
+
+    // Prevent double sending
+    if (
+        elements.sendBtn &&
+        elements.sendBtn.disabled
+    ) {
         return;
     }
 
@@ -304,49 +721,78 @@ async function sendMessage() {
         elements.sendBtn.disabled = true;
     }
 
+    // --------------------------------------------------------
+    // USER MESSAGE
+    // --------------------------------------------------------
+
     const userMessage = {
         id: Date.now(),
         text: messageText,
-        sender: 'user',
+        sender: "user",
         timestamp: new Date(),
-        sentiment: analyzeSentiment(messageText)
+        sentiment:
+            analyzeSentiment(messageText)
     };
 
-    appState.currentConversation.messages.push(userMessage);
+    appState.currentConversation.messages.push(
+        userMessage
+    );
 
-    elements.messageInput.value = '';
+    elements.messageInput.value = "";
 
     if (elements.charCount) {
-        elements.charCount.textContent = '0/1000';
+        elements.charCount.textContent =
+            "0/1000";
     }
 
     renderMessage(userMessage);
 
-    updateAnalytics();
-    updateSessionInfo();
     updateTopics(messageText);
+
+    updateAnalytics();
+
+    updateSessionInfo();
 
     showTypingIndicator();
 
     const startTime = Date.now();
 
-    try {
-        const botResponse = await generateAIResponse(messageText);
+    // --------------------------------------------------------
+    // SEND TO FLASK
+    // --------------------------------------------------------
 
-        const responseTime = Date.now() - startTime;
+    try {
+
+        const botResponse =
+            await generateAIResponse(
+                messageText
+            );
+
+        const responseTime =
+            Date.now() - startTime;
+
+        // ----------------------------------------------------
+        // BOT MESSAGE
+        // ----------------------------------------------------
 
         const botMessage = {
             id: Date.now() + 1,
             text: botResponse,
-            sender: 'bot',
+            sender: "bot",
             timestamp: new Date(),
-            sentiment: 'positive',
-            responseTime: responseTime
+            sentiment: "positive",
+            responseTime:
+                responseTime
         };
 
-        appState.currentConversation.messages.push(botMessage);
+        appState.currentConversation.messages.push(
+            botMessage
+        );
 
-        appState.analytics.responseTimes.push(responseTime);
+        appState.analytics.responseTimes.push(
+            responseTime
+        );
+
         appState.analytics.apiCalls.successful++;
 
         hideTypingIndicator();
@@ -354,401 +800,753 @@ async function sendMessage() {
         renderMessage(botMessage);
 
         updateApiStatus(true);
+
         updateAnalytics();
+
         updateSessionInfo();
 
     } catch (error) {
-        console.error('Chat error:', error);
+
+        console.error(
+            "Chat error:",
+            error
+        );
 
         appState.analytics.apiCalls.failed++;
 
-        const errorResponse = getRandomFallbackResponse(error);
+        hideTypingIndicator();
+
+        // ----------------------------------------------------
+        // CHECK SESSION
+        // ----------------------------------------------------
+
+        if (
+            error &&
+            error.status === 401
+        ) {
+
+            alert(
+                "Your login session has expired. Please login again."
+            );
+
+            window.location.href =
+                "/login";
+
+            return;
+        }
+
+        const errorResponse =
+            getRandomFallbackResponse(
+                error
+            );
 
         const botMessage = {
             id: Date.now() + 1,
             text: errorResponse,
-            sender: 'bot',
+            sender: "bot",
             timestamp: new Date(),
-            sentiment: 'neutral',
+            sentiment: "neutral",
             isError: true
         };
 
-        appState.currentConversation.messages.push(botMessage);
-
-        hideTypingIndicator();
+        appState.currentConversation.messages.push(
+            botMessage
+        );
 
         renderMessage(botMessage);
 
         updateApiStatus(false);
+
         updateAnalytics();
+
         updateSessionInfo();
-    }
 
-    if (elements.sendBtn) {
-        elements.sendBtn.disabled = false;
-    }
+    } finally {
 
-    if (elements.messageInput) {
-        elements.messageInput.focus();
-    }
+        if (elements.sendBtn) {
+            elements.sendBtn.disabled = false;
+        }
 
-    scrollToBottom();
+        if (elements.messageInput) {
+            elements.messageInput.focus();
+        }
+
+        scrollToBottom();
+    }
 }
 
-async function generateAIResponse(userMessage) {
-    const response = await fetch(GEMINI_CONFIG.apiEndpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: userMessage,
-            contextMemory: appState.settings.contextMemory,
-            language: appState.settings.language,
-            temperature: appState.settings.temperature
-        })
-    });
+// ============================================================
+// GENERATE AI RESPONSE
+// ============================================================
 
-    let data;
+async function generateAIResponse(
+    userMessage
+) {
+
+    const response =
+        await fetch(
+            GEMINI_CONFIG.apiEndpoint,
+            {
+                method: "POST",
+
+                credentials: "same-origin",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                    "Accept":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    message:
+                        userMessage,
+
+                    contextMemory:
+                        appState.settings
+                            .contextMemory,
+
+                    language:
+                        appState.settings
+                            .language,
+
+                    temperature:
+                        appState.settings
+                            .temperature
+                })
+            }
+        );
+
+    let data = null;
 
     try {
-        data = await response.json();
+
+        data =
+            await response.json();
+
     } catch (error) {
-        throw new Error('Invalid server response');
+
+        const invalidResponse =
+            new Error(
+                "Invalid server response"
+            );
+
+        invalidResponse.status =
+            response.status;
+
+        throw invalidResponse;
     }
 
     if (!response.ok) {
-        const serverMessage =
-            data && data.reply
-                ? data.reply
-                : 'HTTP ' + response.status;
 
-        throw new Error(serverMessage);
+        const errorMessage =
+            data && data.message
+                ? data.message
+                : data && data.reply
+                    ? data.reply
+                    : "HTTP " +
+                      response.status;
+
+        const serverError =
+            new Error(
+                errorMessage
+            );
+
+        serverError.status =
+            response.status;
+
+        throw serverError;
     }
 
-    if (!data || typeof data.reply !== 'string') {
-        throw new Error('Invalid response from server');
+    if (
+        !data ||
+        typeof data.reply !== "string"
+    ) {
+
+        const invalidError =
+            new Error(
+                "Invalid response from server"
+            );
+
+        invalidError.status =
+            response.status;
+
+        throw invalidError;
     }
 
     return data.reply;
 }
 
-function getRandomFallbackResponse(error) {
-    const message = error && error.message
-        ? error.message.toLowerCase()
-        : '';
+// ============================================================
+// FALLBACK RESPONSE
+// ============================================================
+
+function getRandomFallbackResponse(
+    error
+) {
+
+    const message =
+        error &&
+        error.message
+            ? error.message.toLowerCase()
+            : "";
 
     let responses;
 
     if (
-        message.includes('failed to fetch') ||
-        message.includes('network') ||
-        message.includes('connection')
+        message.includes(
+            "failed to fetch"
+        ) ||
+        message.includes(
+            "network"
+        ) ||
+        message.includes(
+            "connection"
+        )
     ) {
-        responses = fallbackResponses.networkError;
+
+        responses =
+            fallbackResponses.networkError;
+
     } else if (
-        message.includes('http') ||
-        message.includes('api') ||
-        message.includes('gemini')
+        message.includes(
+            "http"
+        ) ||
+        message.includes(
+            "api"
+        ) ||
+        message.includes(
+            "gemini"
+        )
     ) {
-        responses = fallbackResponses.apiError;
+
+        responses =
+            fallbackResponses.apiError;
+
     } else {
-        responses = fallbackResponses.genericError;
+
+        responses =
+            fallbackResponses.genericError;
     }
 
     return responses[
-        Math.floor(Math.random() * responses.length)
+        Math.floor(
+            Math.random() *
+            responses.length
+        )
     ];
 }
 
+// ============================================================
+// SENTIMENT ANALYSIS
+// ============================================================
+
 function analyzeSentiment(text) {
-    const lowerText = text.toLowerCase();
+
+    const lowerText =
+        text.toLowerCase();
 
     const positiveWords = [
-        'good',
-        'great',
-        'awesome',
-        'excellent',
-        'amazing',
-        'wonderful',
-        'love',
-        'like',
-        'happy',
-        'fantastic',
-        'perfect',
-        'thank',
-        'thanks',
-        'glad',
-        'nice'
+        "good",
+        "great",
+        "awesome",
+        "excellent",
+        "amazing",
+        "wonderful",
+        "love",
+        "like",
+        "happy",
+        "fantastic",
+        "perfect",
+        "thank",
+        "thanks",
+        "glad",
+        "nice"
     ];
 
     const negativeWords = [
-        'bad',
-        'terrible',
-        'awful',
-        'horrible',
-        'hate',
-        'dislike',
-        'sad',
-        'angry',
-        'frustrated',
-        'disappointed',
-        'problem',
-        'issue',
-        'wrong',
-        'upset',
-        'annoyed'
+        "bad",
+        "terrible",
+        "awful",
+        "horrible",
+        "hate",
+        "dislike",
+        "sad",
+        "angry",
+        "frustrated",
+        "disappointed",
+        "problem",
+        "issue",
+        "wrong",
+        "upset",
+        "annoyed"
     ];
 
     let positiveCount = 0;
     let negativeCount = 0;
 
-    positiveWords.forEach(function (word) {
-        if (lowerText.includes(word)) {
-            positiveCount++;
-        }
-    });
+    positiveWords.forEach(
+        function (word) {
 
-    negativeWords.forEach(function (word) {
-        if (lowerText.includes(word)) {
-            negativeCount++;
+            if (
+                lowerText.includes(
+                    word
+                )
+            ) {
+                positiveCount++;
+            }
         }
-    });
+    );
 
-    if (positiveCount > negativeCount) {
-        return 'positive';
+    negativeWords.forEach(
+        function (word) {
+
+            if (
+                lowerText.includes(
+                    word
+                )
+            ) {
+                negativeCount++;
+            }
+        }
+    );
+
+    if (
+        positiveCount >
+        negativeCount
+    ) {
+        return "positive";
     }
 
-    if (negativeCount > positiveCount) {
-        return 'negative';
+    if (
+        negativeCount >
+        positiveCount
+    ) {
+        return "negative";
     }
 
-    return 'neutral';
+    return "neutral";
 }
 
+// ============================================================
+// RENDER MESSAGE
+// ============================================================
+
 function renderMessage(message) {
+
     if (!elements.chatMessages) {
         return;
     }
 
-    const messageDiv = document.createElement('div');
+    const messageDiv =
+        document.createElement(
+            "div"
+        );
+
     messageDiv.className =
-        'message ' + message.sender + '-message';
+        "message " +
+        message.sender +
+        "-message";
 
-    const avatar = document.createElement('div');
-    avatar.className = 'message-avatar';
+    // --------------------------------------------------------
+    // AVATAR
+    // --------------------------------------------------------
+
+    const avatar =
+        document.createElement(
+            "div"
+        );
+
+    avatar.className =
+        "message-avatar";
+
     avatar.textContent =
-        message.sender === 'bot'
-            ? '🤖'
-            : '👤';
+        message.sender === "bot"
+            ? "🤖"
+            : "👤";
 
-    const content = document.createElement('div');
-    content.className = 'message-content';
+    // --------------------------------------------------------
+    // CONTENT
+    // --------------------------------------------------------
 
-    const textDiv = document.createElement('div');
-    textDiv.className = 'message-text';
+    const content =
+        document.createElement(
+            "div"
+        );
 
-    textDiv.textContent = message.text;
+    content.className =
+        "message-content";
+
+    // --------------------------------------------------------
+    // TEXT
+    // --------------------------------------------------------
+
+    const textDiv =
+        document.createElement(
+            "div"
+        );
+
+    textDiv.className =
+        "message-text";
+
+    textDiv.textContent =
+        message.text;
 
     if (message.isError) {
-        textDiv.classList.add('error-message');
+
+        textDiv.classList.add(
+            "error-message"
+        );
     }
 
-    content.appendChild(textDiv);
+    content.appendChild(
+        textDiv
+    );
 
-    if (appState.settings.showTimestamps) {
-        const timeDiv = document.createElement('div');
-
-        timeDiv.className = 'message-time';
-
-        timeDiv.textContent =
-            formatTime(message.timestamp);
-
-        content.appendChild(timeDiv);
-    }
+    // --------------------------------------------------------
+    // TIMESTAMP
+    // --------------------------------------------------------
 
     if (
-        appState.settings.enableSentiment &&
-        message.sender === 'user' &&
+        appState.settings
+            .showTimestamps
+    ) {
+
+        const timeDiv =
+            document.createElement(
+                "div"
+            );
+
+        timeDiv.className =
+            "message-time";
+
+        timeDiv.textContent =
+            formatTime(
+                message.timestamp
+            );
+
+        content.appendChild(
+            timeDiv
+        );
+    }
+
+    // --------------------------------------------------------
+    // SENTIMENT
+    // --------------------------------------------------------
+
+    if (
+        appState.settings
+            .enableSentiment &&
+        message.sender === "user" &&
         message.sentiment
     ) {
+
         const sentimentDiv =
-            document.createElement('div');
+            document.createElement(
+                "div"
+            );
 
         sentimentDiv.className =
-            'sentiment-indicator ' +
+            "sentiment-indicator " +
             message.sentiment;
 
         sentimentDiv.textContent =
-            getSentimentIcon(message.sentiment) +
-            ' ' +
+            getSentimentIcon(
+                message.sentiment
+            ) +
+            " " +
             message.sentiment;
 
-        content.appendChild(sentimentDiv);
+        content.appendChild(
+            sentimentDiv
+        );
     }
 
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(content);
+    messageDiv.appendChild(
+        avatar
+    );
 
-    elements.chatMessages.appendChild(messageDiv);
+    messageDiv.appendChild(
+        content
+    );
+
+    elements.chatMessages.appendChild(
+        messageDiv
+    );
 
     scrollToBottom();
 }
 
-function getSentimentIcon(sentiment) {
-    if (sentiment === 'positive') {
-        return '😊';
+// ============================================================
+// SENTIMENT ICON
+// ============================================================
+
+function getSentimentIcon(
+    sentiment
+) {
+
+    if (
+        sentiment === "positive"
+    ) {
+        return "😊";
     }
 
-    if (sentiment === 'negative') {
-        return '😔';
+    if (
+        sentiment === "negative"
+    ) {
+        return "😔";
     }
 
-    return '😐';
+    return "😐";
 }
 
+// ============================================================
+// TYPING INDICATOR
+// ============================================================
+
 function showTypingIndicator() {
-    if (elements.typingIndicator) {
-        elements.typingIndicator.classList.remove('hidden');
+
+    if (
+        elements.typingIndicator
+    ) {
+
+        elements.typingIndicator.classList.remove(
+            "hidden"
+        );
+
         scrollToBottom();
     }
 }
 
 function hideTypingIndicator() {
-    if (elements.typingIndicator) {
-        elements.typingIndicator.classList.add('hidden');
+
+    if (
+        elements.typingIndicator
+    ) {
+
+        elements.typingIndicator.classList.add(
+            "hidden"
+        );
     }
 }
 
+// ============================================================
+// SCROLL CHAT
+// ============================================================
+
 function scrollToBottom() {
-    if (elements.chatMessages) {
+
+    if (
+        elements.chatMessages
+    ) {
+
         elements.chatMessages.scrollTop =
             elements.chatMessages.scrollHeight;
     }
 }
 
+// ============================================================
+// FORMAT TIME
+// ============================================================
+
 function formatTime(date) {
+
     const validDate =
         date instanceof Date
             ? date
             : new Date(date);
 
     return validDate.toLocaleTimeString(
-        'en-US',
+        "en-US",
         {
-            hour: 'numeric',
-            minute: '2-digit',
+            hour: "numeric",
+            minute: "2-digit",
             hour12: true
         }
     );
 }
 
-function switchSection(sectionName) {
-    elements.navItems.forEach(function (nav) {
-        nav.classList.remove('active');
+// ============================================================
+// SECTION SWITCHING
+// ============================================================
 
-        if (
-            nav.getAttribute('data-section') ===
-            sectionName
-        ) {
-            nav.classList.add('active');
+function switchSection(
+    sectionName
+) {
+
+    elements.navItems.forEach(
+        function (nav) {
+
+            nav.classList.remove(
+                "active"
+            );
+
+            if (
+                nav.getAttribute(
+                    "data-section"
+                ) === sectionName
+            ) {
+
+                nav.classList.add(
+                    "active"
+                );
+            }
         }
-    });
+    );
 
-    elements.mobileNavItems.forEach(function (nav) {
-        nav.classList.remove('active');
+    elements.mobileNavItems.forEach(
+        function (nav) {
 
-        if (
-            nav.getAttribute('data-section') ===
-            sectionName
-        ) {
-            nav.classList.add('active');
+            nav.classList.remove(
+                "active"
+            );
+
+            if (
+                nav.getAttribute(
+                    "data-section"
+                ) === sectionName
+            ) {
+
+                nav.classList.add(
+                    "active"
+                );
+            }
         }
-    });
+    );
 
-    elements.contentSections.forEach(function (section) {
-        section.classList.remove('active');
+    elements.contentSections.forEach(
+        function (section) {
 
-        if (
-            section.id ===
-            sectionName + '-section'
-        ) {
-            section.classList.add('active');
+            section.classList.remove(
+                "active"
+            );
+
+            if (
+                section.id ===
+                sectionName +
+                "-section"
+            ) {
+
+                section.classList.add(
+                    "active"
+                );
+            }
         }
-    });
+    );
 
-    appState.currentSection = sectionName;
+    appState.currentSection =
+        sectionName;
 
-    if (sectionName === 'analytics') {
-        setTimeout(function () {
-            initializeCharts();
-        }, 100);
+    if (
+        sectionName ===
+        "analytics"
+    ) {
+
+        setTimeout(
+            initializeCharts,
+            100
+        );
     }
 }
 
+// ============================================================
+// THEME TOGGLE
+// ============================================================
+
 function toggleTheme() {
+
     const currentTheme =
         document.documentElement.getAttribute(
-            'data-color-scheme'
+            "data-color-scheme"
         );
 
     const newTheme =
-        currentTheme === 'dark'
-            ? 'light'
-            : 'dark';
+        currentTheme === "dark"
+            ? "light"
+            : "dark";
 
-    document.documentElement.setAttribute(
-        'data-color-scheme',
-        newTheme
-    );
+    appState.settings.theme =
+        newTheme;
 
-    appState.settings.theme = newTheme;
+    applyTheme();
 
-    if (elements.themeSelect) {
-        elements.themeSelect.value = newTheme;
+    if (
+        elements.themeSelect
+    ) {
+
+        elements.themeSelect.value =
+            newTheme;
     }
-
-    updateThemeIcon(newTheme);
 }
 
-function updateThemeIcon(theme) {
-    if (!elements.themeToggle) {
+// ============================================================
+// UPDATE THEME ICON
+// ============================================================
+
+function updateThemeIcon(
+    theme
+) {
+
+    if (
+        !elements.themeToggle
+    ) {
         return;
     }
 
     const icon =
-        elements.themeToggle.querySelector('i');
+        elements.themeToggle.querySelector(
+            "i"
+        );
 
     if (!icon) {
         return;
     }
 
     icon.className =
-        theme === 'dark'
-            ? 'fas fa-sun'
-            : 'fas fa-moon';
+        theme === "dark"
+            ? "fas fa-sun"
+            : "fas fa-moon";
 }
 
-function applyTheme() {
-    const theme = appState.settings.theme;
+// ============================================================
+// APPLY THEME
+// ============================================================
 
-    if (theme === 'auto') {
+function applyTheme() {
+
+    const theme =
+        appState.settings.theme;
+
+    if (
+        theme === "auto"
+    ) {
+
         document.documentElement.removeAttribute(
-            'data-color-scheme'
+            "data-color-scheme"
         );
+
     } else {
+
         document.documentElement.setAttribute(
-            'data-color-scheme',
+            "data-color-scheme",
             theme
         );
     }
 
-    updateThemeIcon(theme);
+    updateThemeIcon(
+        theme
+    );
 }
 
+// ============================================================
+// UPDATE ANALYTICS
+// ============================================================
+
 function updateAnalytics() {
+
     appState.analytics.totalMessages =
-        appState.currentConversation.messages.length;
+        appState.currentConversation
+            .messages.length;
 
     appState.analytics.sentimentCounts = {
         positive: 0,
@@ -756,69 +1554,94 @@ function updateAnalytics() {
         neutral: 0
     };
 
-    appState.currentConversation.messages.forEach(
-        function (message) {
-            if (
-                message.sentiment &&
-                appState.analytics.sentimentCounts[
-                    message.sentiment
-                ] !== undefined
-            ) {
-                appState.analytics.sentimentCounts[
-                    message.sentiment
-                ]++;
+    appState.currentConversation
+        .messages
+        .forEach(
+            function (message) {
+
+                if (
+                    message.sentiment &&
+                    appState.analytics
+                        .sentimentCounts[
+                            message.sentiment
+                        ] !== undefined
+                ) {
+
+                    appState.analytics
+                        .sentimentCounts[
+                            message.sentiment
+                        ]++;
+                }
             }
-        }
-    );
+        );
 
-    const totalConversations =
-        document.getElementById('totalConversations');
+    if (
+        elements.totalConversations
+    ) {
 
-    const totalMessages =
-        document.getElementById('totalMessages');
-
-    const avgResponseTime =
-        document.getElementById('avgResponseTime');
-
-    const apiSuccessRate =
-        document.getElementById('apiSuccessRate');
-
-    if (totalConversations) {
-        totalConversations.textContent =
-            appState.analytics.totalConversations;
-    }
-
-    if (totalMessages) {
-        totalMessages.textContent =
-            appState.analytics.totalMessages;
+        elements.totalConversations.textContent =
+            appState.analytics
+                .totalConversations;
     }
 
     if (
-        avgResponseTime &&
-        appState.analytics.responseTimes.length > 0
+        elements.totalMessages
     ) {
-        const total =
-            appState.analytics.responseTimes.reduce(
-                function (a, b) {
-                    return a + b;
-                },
-                0
-            );
 
-        const average =
-            total /
-            appState.analytics.responseTimes.length;
-
-        avgResponseTime.textContent =
-            (average / 1000).toFixed(1) + 's';
+        elements.totalMessages.textContent =
+            appState.analytics
+                .totalMessages;
     }
 
-    if (apiSuccessRate) {
+    if (
+        elements.avgResponseTime
+    ) {
+
+        if (
+            appState.analytics
+                .responseTimes.length >
+            0
+        ) {
+
+            const total =
+                appState.analytics
+                    .responseTimes
+                    .reduce(
+                        function (a, b) {
+                            return a + b;
+                        },
+                        0
+                    );
+
+            const average =
+                total /
+                appState.analytics
+                    .responseTimes.length;
+
+            elements.avgResponseTime.textContent =
+                (
+                    average / 1000
+                ).toFixed(1) +
+                "s";
+
+        } else {
+
+            elements.avgResponseTime.textContent =
+                "0.0s";
+        }
+    }
+
+    if (
+        elements.apiSuccessRate
+    ) {
+
         const successful =
-            appState.analytics.apiCalls.successful;
+            appState.analytics
+                .apiCalls.successful;
 
         const failed =
-            appState.analytics.apiCalls.failed;
+            appState.analytics
+                .apiCalls.failed;
 
         const total =
             successful + failed;
@@ -826,44 +1649,67 @@ function updateAnalytics() {
         const rate =
             total > 0
                 ? Math.round(
-                    (successful / total) * 100
+                    (
+                        successful /
+                        total
+                    ) * 100
                 )
                 : 100;
 
-        apiSuccessRate.textContent =
-            rate + '%';
+        elements.apiSuccessRate.textContent =
+            rate + "%";
     }
 
     updateCharts();
 }
 
+// ============================================================
+// CHARTS
+// ============================================================
+
 function initializeCharts() {
-    if (typeof Chart === 'undefined') {
-        console.warn('Chart.js is not loaded.');
+
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
+
+        console.warn(
+            "Chart.js is not loaded."
+        );
+
         return;
     }
 
+    // --------------------------------------------------------
+    // SENTIMENT CHART
+    // --------------------------------------------------------
+
     const sentimentCanvas =
-        document.getElementById('sentimentChart');
+        document.getElementById(
+            "sentimentChart"
+        );
 
     if (
         sentimentCanvas &&
         !sentimentCanvas.chartInstance
     ) {
+
         const data =
-            appState.analytics.sentimentCounts;
+            appState.analytics
+                .sentimentCounts;
 
         sentimentCanvas.chartInstance =
             new Chart(
                 sentimentCanvas,
                 {
-                    type: 'doughnut',
+                    type: "doughnut",
 
                     data: {
                         labels: [
-                            'Positive',
-                            'Negative',
-                            'Neutral'
+                            "Positive",
+                            "Negative",
+                            "Neutral"
                         ],
 
                         datasets: [
@@ -875,9 +1721,9 @@ function initializeCharts() {
                                 ],
 
                                 backgroundColor: [
-                                    '#1FB8CD',
-                                    '#B4413C',
-                                    '#5D878F'
+                                    "#1FB8CD",
+                                    "#B4413C",
+                                    "#5D878F"
                                 ],
 
                                 borderWidth: 0
@@ -887,11 +1733,14 @@ function initializeCharts() {
 
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+
+                        maintainAspectRatio:
+                            true,
 
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position:
+                                    "bottom"
                             }
                         }
                     }
@@ -899,30 +1748,45 @@ function initializeCharts() {
             );
     }
 
+    // --------------------------------------------------------
+    // RESPONSE TIME CHART
+    // --------------------------------------------------------
+
     const responseCanvas =
-        document.getElementById('responseTimeChart');
+        document.getElementById(
+            "responseTimeChart"
+        );
 
     if (
         responseCanvas &&
         !responseCanvas.chartInstance
     ) {
+
         const responseTimes =
-            appState.analytics.responseTimes
+            appState.analytics
+                .responseTimes
                 .slice(-10)
-                .map(function (time) {
-                    return time / 1000;
-                });
+                .map(
+                    function (time) {
+                        return time / 1000;
+                    }
+                );
 
         const labels =
-            responseTimes.map(function (_, index) {
-                return 'Msg ' + (index + 1);
-            });
+            responseTimes.map(
+                function (_, index) {
+                    return (
+                        "Msg " +
+                        (index + 1)
+                    );
+                }
+            );
 
         responseCanvas.chartInstance =
             new Chart(
                 responseCanvas,
                 {
-                    type: 'line',
+                    type: "line",
 
                     data: {
                         labels: labels,
@@ -930,16 +1794,16 @@ function initializeCharts() {
                         datasets: [
                             {
                                 label:
-                                    'Response Time (seconds)',
+                                    "Response Time (seconds)",
 
                                 data:
                                     responseTimes,
 
                                 borderColor:
-                                    '#1FB8CD',
+                                    "#1FB8CD",
 
                                 backgroundColor:
-                                    '#FFC185',
+                                    "#FFC185",
 
                                 borderWidth: 2,
 
@@ -952,7 +1816,9 @@ function initializeCharts() {
 
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+
+                        maintainAspectRatio:
+                            true,
 
                         plugins: {
                             legend: {
@@ -962,11 +1828,15 @@ function initializeCharts() {
 
                         scales: {
                             y: {
-                                beginAtZero: true,
+                                beginAtZero:
+                                    true,
 
                                 title: {
-                                    display: true,
-                                    text: 'Seconds'
+                                    display:
+                                        true,
+
+                                    text:
+                                        "Seconds"
                                 }
                             }
                         }
@@ -976,20 +1846,36 @@ function initializeCharts() {
     }
 }
 
+// ============================================================
+// UPDATE CHARTS
+// ============================================================
+
 function updateCharts() {
-    if (typeof Chart === 'undefined') {
+
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
         return;
     }
 
+    // --------------------------------------------------------
+    // SENTIMENT
+    // --------------------------------------------------------
+
     const sentimentCanvas =
-        document.getElementById('sentimentChart');
+        document.getElementById(
+            "sentimentChart"
+        );
 
     if (
         sentimentCanvas &&
         sentimentCanvas.chartInstance
     ) {
+
         const data =
-            appState.analytics.sentimentCounts;
+            appState.analytics
+                .sentimentCounts;
 
         sentimentCanvas
             .chartInstance
@@ -1006,33 +1892,49 @@ function updateCharts() {
             .update();
     }
 
+    // --------------------------------------------------------
+    // RESPONSE TIME
+    // --------------------------------------------------------
+
     const responseCanvas =
-        document.getElementById('responseTimeChart');
+        document.getElementById(
+            "responseTimeChart"
+        );
 
     if (
         responseCanvas &&
         responseCanvas.chartInstance
     ) {
+
         const responseTimes =
-            appState.analytics.responseTimes
+            appState.analytics
+                .responseTimes
                 .slice(-10)
-                .map(function (time) {
-                    return time / 1000;
-                });
+                .map(
+                    function (time) {
+                        return time / 1000;
+                    }
+                );
 
         responseCanvas
             .chartInstance
             .data
             .labels =
-            responseTimes.map(function (_, index) {
-                return 'Msg ' + (index + 1);
-            });
+            responseTimes.map(
+                function (_, index) {
+                    return (
+                        "Msg " +
+                        (index + 1)
+                    );
+                }
+            );
 
         responseCanvas
             .chartInstance
             .data
             .datasets[0]
-            .data = responseTimes;
+            .data =
+            responseTimes;
 
         responseCanvas
             .chartInstance
@@ -1040,29 +1942,58 @@ function updateCharts() {
     }
 }
 
+// ============================================================
+// SESSION INFORMATION
+// ============================================================
+
 function updateSessionInfo() {
-    if (elements.sessionMessages) {
+
+    if (
+        elements.sessionMessages
+    ) {
+
         elements.sessionMessages.textContent =
-            appState.currentConversation.messages.length;
+            appState.currentConversation
+                .messages.length;
     }
 
-    if (elements.apiCalls) {
+    if (
+        elements.apiCalls
+    ) {
+
         elements.apiCalls.textContent =
-            appState.analytics.apiCalls.successful +
-            appState.analytics.apiCalls.failed;
+            appState.analytics
+                .apiCalls.successful +
+            appState.analytics
+                .apiCalls.failed;
     }
 
     const userMessages =
-        appState.currentConversation.messages
-            .filter(function (message) {
-                return message.sender === 'user';
-            })
+        appState.currentConversation
+            .messages
+            .filter(
+                function (message) {
+                    return (
+                        message.sender ===
+                        "user"
+                    );
+                }
+            )
             .slice(-3);
 
-    if (userMessages.length === 0) {
-        if (elements.sessionSentiment) {
+    if (
+        userMessages.length === 0
+    ) {
+
+        if (
+            elements.sessionSentiment
+        ) {
+
             elements.sessionSentiment.textContent =
-                'Neutral';
+                "Neutral";
+
+            elements.sessionSentiment.className =
+                "stat-value sentiment neutral";
         }
 
         return;
@@ -1074,189 +2005,311 @@ function updateSessionInfo() {
         neutral: 0
     };
 
-    userMessages.forEach(function (message) {
-        if (
-            counts[message.sentiment] !== undefined
-        ) {
-            counts[message.sentiment]++;
-        }
-    });
+    userMessages.forEach(
+        function (message) {
 
-    let dominant = 'neutral';
+            if (
+                counts[
+                    message.sentiment
+                ] !== undefined
+            ) {
+
+                counts[
+                    message.sentiment
+                ]++;
+            }
+        }
+    );
+
+    let dominant =
+        "neutral";
 
     if (
-        counts.positive > counts.negative &&
-        counts.positive >= counts.neutral
+        counts.positive >
+            counts.negative &&
+        counts.positive >=
+            counts.neutral
     ) {
-        dominant = 'positive';
+
+        dominant =
+            "positive";
+
     } else if (
-        counts.negative > counts.positive &&
-        counts.negative >= counts.neutral
+        counts.negative >
+            counts.positive &&
+        counts.negative >=
+            counts.neutral
     ) {
-        dominant = 'negative';
+
+        dominant =
+            "negative";
     }
 
-    if (elements.sessionSentiment) {
+    if (
+        elements.sessionSentiment
+    ) {
+
         elements.sessionSentiment.textContent =
-            dominant.charAt(0).toUpperCase() +
+            dominant
+                .charAt(0)
+                .toUpperCase() +
             dominant.slice(1);
 
         elements.sessionSentiment.className =
-            'stat-value sentiment ' +
+            "stat-value sentiment " +
             dominant;
     }
 }
 
+// ============================================================
+// TOPIC EXTRACTION
+// ============================================================
+
 function updateTopics(message) {
+
     const topics =
         extractTopics(message);
 
-    topics.forEach(function (topic) {
-        if (
-            !appState.currentConversation
-                .topics
-                .includes(topic)
-        ) {
-            appState.currentConversation
-                .topics
-                .push(topic);
+    topics.forEach(
+        function (topic) {
 
-            if (elements.recentTopics) {
-                const topicDiv =
-                    document.createElement('div');
+            if (
+                !appState
+                    .currentConversation
+                    .topics
+                    .includes(topic)
+            ) {
 
-                topicDiv.className =
-                    'topic-item';
+                appState
+                    .currentConversation
+                    .topics
+                    .push(topic);
 
-                topicDiv.textContent =
-                    topic;
-
-                elements.recentTopics
-                    .appendChild(topicDiv);
-
-                while (
+                if (
                     elements.recentTopics
-                        .children
-                        .length > 5
                 ) {
-                    elements.recentTopics
-                        .removeChild(
-                            elements.recentTopics
-                                .firstChild
+
+                    const topicDiv =
+                        document.createElement(
+                            "div"
                         );
+
+                    topicDiv.className =
+                        "topic-item";
+
+                    topicDiv.textContent =
+                        topic;
+
+                    elements.recentTopics
+                        .appendChild(
+                            topicDiv
+                        );
+
+                    while (
+                        elements.recentTopics
+                            .children
+                            .length > 5
+                    ) {
+
+                        elements.recentTopics
+                            .removeChild(
+                                elements.recentTopics
+                                    .firstChild
+                            );
+                    }
                 }
             }
         }
-    });
+    );
 }
 
+// ============================================================
+// EXTRACT TOPICS
+// ============================================================
+
 function extractTopics(text) {
+
     const lowerText =
         text.toLowerCase();
 
     const keywords = [
-        'ai',
-        'artificial intelligence',
-        'machine learning',
-        'deep learning',
-        'technology',
-        'coding',
-        'programming',
-        'python',
-        'sql',
-        'data science',
-        'data analysis',
-        'job',
-        'jobs',
-        'career',
-        'help',
-        'question',
-        'problem',
-        'explain'
+        "ai",
+        "artificial intelligence",
+        "machine learning",
+        "deep learning",
+        "technology",
+        "coding",
+        "programming",
+        "python",
+        "sql",
+        "data science",
+        "data analysis",
+        "job",
+        "jobs",
+        "career",
+        "help",
+        "question",
+        "problem",
+        "explain"
     ];
 
     const topics = [];
 
-    keywords.forEach(function (keyword) {
-        if (lowerText.includes(keyword)) {
-            topics.push(
-                keyword.charAt(0).toUpperCase() +
-                keyword.slice(1)
-            );
+    keywords.forEach(
+        function (keyword) {
+
+            if (
+                lowerText.includes(
+                    keyword
+                )
+            ) {
+
+                topics.push(
+                    keyword
+                        .charAt(0)
+                        .toUpperCase() +
+                    keyword.slice(1)
+                );
+            }
         }
-    });
+    );
 
     return topics.length > 0
         ? topics
-        : ['General'];
+        : ["General"];
 }
 
-function updateApiStatus(isOnline) {
+// ============================================================
+// API STATUS
+// ============================================================
+
+function updateApiStatus(
+    isOnline
+) {
+
     const indicators =
         document.querySelectorAll(
-            '.status-indicator'
+            ".status-indicator"
         );
 
-    indicators.forEach(function (indicator) {
-        if (isOnline) {
-            indicator.classList.add('online');
-            indicator.classList.remove('offline');
-        } else {
-            indicator.classList.remove('online');
-            indicator.classList.add('offline');
-        }
-    });
+    indicators.forEach(
+        function (indicator) {
 
-    if (elements.apiStatus) {
+            if (isOnline) {
+
+                indicator.classList.add(
+                    "online"
+                );
+
+                indicator.classList.remove(
+                    "offline"
+                );
+
+            } else {
+
+                indicator.classList.remove(
+                    "online"
+                );
+
+                indicator.classList.add(
+                    "offline"
+                );
+            }
+        }
+    );
+
+    if (
+        elements.apiStatus
+    ) {
+
         const statusText =
             elements.apiStatus.querySelector(
-                'span:last-child'
+                "span:last-child"
             );
 
         if (statusText) {
+
             statusText.textContent =
                 isOnline
-                    ? 'AI Online'
-                    : 'AI Offline';
+                    ? "AI Online"
+                    : "AI Offline";
         }
     }
 }
 
-function startSessionTimer() {
-    setInterval(function () {
-        const minutes =
-            Math.floor(
-                (
-                    Date.now() -
-                    appState.currentConversation.startTime
-                ) / 60000
-            );
+// ============================================================
+// SESSION TIMER
+// ============================================================
 
-        if (elements.sessionDuration) {
-            elements.sessionDuration.textContent =
-                minutes + 'm';
-        }
-    }, 60000);
+function startSessionTimer() {
+
+    updateSessionDuration();
+
+    setInterval(
+        updateSessionDuration,
+        60000
+    );
 }
 
+function updateSessionDuration() {
+
+    const minutes =
+        Math.floor(
+            (
+                Date.now() -
+                appState
+                    .currentConversation
+                    .startTime
+            ) / 60000
+        );
+
+    if (
+        elements.sessionDuration
+    ) {
+
+        elements.sessionDuration.textContent =
+            minutes + "m";
+    }
+}
+
+// ============================================================
+// RERENDER MESSAGES
+// ============================================================
+
 function rerenderMessages() {
-    if (!elements.chatMessages) {
+
+    if (
+        !elements.chatMessages
+    ) {
         return;
     }
 
-    elements.chatMessages.innerHTML = '';
+    elements.chatMessages.innerHTML =
+        "";
 
-    appState.currentConversation
+    appState
+        .currentConversation
         .messages
-        .forEach(function (message) {
-            renderMessage(message);
-        });
+        .forEach(
+            function (message) {
+                renderMessage(message);
+            }
+        );
 
     scrollToBottom();
 }
 
+// ============================================================
+// EXPORT CHAT HISTORY
+// ============================================================
+
 function exportChatHistory() {
+
     const chatData = {
+
+        user:
+            appState.currentUser,
+
         conversation:
             appState.currentConversation,
 
@@ -1270,7 +2323,8 @@ function exportChatHistory() {
             new Date().toISOString(),
 
         messageCount:
-            appState.currentConversation
+            appState
+                .currentConversation
                 .messages
                 .length
     };
@@ -1286,38 +2340,54 @@ function exportChatHistory() {
         new Blob(
             [dataString],
             {
-                type: 'application/json'
+                type:
+                    "application/json"
             }
         );
 
     const url =
-        URL.createObjectURL(blob);
+        URL.createObjectURL(
+            blob
+        );
 
     const link =
-        document.createElement('a');
+        document.createElement(
+            "a"
+        );
 
     link.href = url;
 
     link.download =
-        'chat-history-' +
+        "chat-history-" +
         new Date()
             .toISOString()
-            .split('T')[0] +
-        '.json';
+            .split("T")[0] +
+        ".json";
 
-    document.body.appendChild(link);
+    document.body.appendChild(
+        link
+    );
 
     link.click();
 
-    document.body.removeChild(link);
+    document.body.removeChild(
+        link
+    );
 
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(
+        url
+    );
 }
 
+// ============================================================
+// CLEAR CHAT HISTORY
+// ============================================================
+
 async function clearChatHistory() {
+
     const confirmed =
-        confirm(
-            'Are you sure you want to clear the chat history? This will also clear the chatbot memory.'
+        window.confirm(
+            "Are you sure you want to clear the chat history? This will also clear the chatbot memory."
         );
 
     if (!confirmed) {
@@ -1325,45 +2395,75 @@ async function clearChatHistory() {
     }
 
     try {
+
         const response =
             await fetch(
-                '/clear-memory',
+                "/clear-memory",
                 {
-                    method: 'POST',
+                    method:
+                        "POST",
+
+                    credentials:
+                        "same-origin",
+
                     headers: {
-                        'Content-Type':
-                            'application/json'
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
                     }
                 }
             );
 
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/login";
+
+            return;
+        }
+
         if (!response.ok) {
+
             console.warn(
-                'Server memory could not be cleared.'
+                "Server memory could not be cleared."
             );
         }
+
     } catch (error) {
+
         console.warn(
-            'Could not clear server memory:',
+            "Could not clear server memory:",
             error
         );
     }
 
+    // --------------------------------------------------------
+    // RESET LOCAL CHAT
+    // --------------------------------------------------------
+
     appState.currentConversation = {
         messages: [],
-        sentiment: 'neutral',
+        sentiment: "neutral",
         topics: [],
         startTime: Date.now()
     };
 
     appState.analytics = {
         totalConversations: 1,
+
         totalMessages: 0,
+
         responseTimes: [],
+
         apiCalls: {
             successful: 0,
             failed: 0
         },
+
         sentimentCounts: {
             positive: 0,
             negative: 0,
@@ -1371,20 +2471,140 @@ async function clearChatHistory() {
         }
     };
 
-    if (elements.chatMessages) {
-        elements.chatMessages.innerHTML = '';
+    if (
+        elements.chatMessages
+    ) {
+
+        elements.chatMessages.innerHTML =
+            "";
     }
 
-    if (elements.recentTopics) {
+    if (
+        elements.recentTopics
+    ) {
+
         elements.recentTopics.innerHTML =
             '<div class="topic-item">General</div>';
     }
 
-    initializeApp();
+    initializeApplication();
 
     updateAnalytics();
+
     updateSessionInfo();
+
     updateApiStatus(true);
 }
 
-console.log('AI Chatbot app.js loaded successfully.');
+// ============================================================
+// LOGOUT
+// ============================================================
+
+async function logoutUser() {
+
+    // Prevent accidental multiple clicks
+    if (
+        elements.logoutBtn
+    ) {
+        elements.logoutBtn.disabled =
+            true;
+    }
+
+    if (
+        elements.sidebarLogoutBtn
+    ) {
+        elements.sidebarLogoutBtn.disabled =
+            true;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/logout",
+                {
+                    method:
+                        "POST",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+        let data = null;
+
+        try {
+            data =
+                await response.json();
+        } catch (error) {
+            data = null;
+        }
+
+        console.log(
+            "Logout response:",
+            data
+        );
+
+        // Always redirect after logout API call
+        window.location.replace(
+            "/login"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Logout error:",
+            error
+        );
+
+        // If API fails, use the Flask logout route
+        window.location.replace(
+            "/logout"
+        );
+    }
+}
+
+// ============================================================
+// INITIAL FOCUS
+// ============================================================
+
+window.addEventListener(
+    "load",
+    function () {
+
+        if (
+            elements.messageInput
+        ) {
+
+            elements.messageInput.focus();
+        }
+    }
+);
+
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+window.addEventListener(
+    "error",
+    function (event) {
+
+        console.error(
+            "JavaScript Error:",
+            event.error ||
+                event.message
+        );
+    }
+);
+
+console.log(
+    "AI Chatbot app.js loaded successfully."
+);

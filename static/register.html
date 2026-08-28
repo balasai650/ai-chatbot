@@ -1,0 +1,383 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Account - Dynamic AI Chatbot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #5568d8;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .error {
+            background: #ffe5e5;
+            color: #c62828;
+        }
+
+        .success {
+            background: #e5f7e9;
+            color: #2e7d32;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .password-note {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="register-container">
+
+    <div class="logo">🤖</div>
+
+    <h1>Create Account</h1>
+
+    <p class="subtitle">
+        Create your Dynamic AI Chatbot account
+    </p>
+
+    <form id="registerForm">
+
+        <div class="form-group">
+            <label for="username">Username</label>
+
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter username"
+                required
+                autocomplete="username"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter password"
+                required
+                autocomplete="new-password"
+            >
+
+            <div class="password-note">
+                Password must contain at least 6 characters.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Re-enter password"
+                required
+                autocomplete="new-password"
+            >
+        </div>
+
+        <button
+            type="submit"
+            id="registerButton"
+        >
+            Create Account
+        </button>
+
+    </form>
+
+    <div
+        id="message"
+        class="message"
+    ></div>
+
+    <div class="login-link">
+        Already have an account?
+        <a href="/login">Login here</a>
+    </div>
+
+</div>
+
+
+<script>
+
+const registerForm = document.getElementById("registerForm");
+
+const usernameInput =
+    document.getElementById("username");
+
+const passwordInput =
+    document.getElementById("password");
+
+const confirmPasswordInput =
+    document.getElementById("confirmPassword");
+
+const registerButton =
+    document.getElementById("registerButton");
+
+const message =
+    document.getElementById("message");
+
+
+function showMessage(text, type) {
+
+    message.textContent = text;
+
+    message.className =
+        "message " + type;
+
+    message.style.display = "block";
+}
+
+
+registerForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const username =
+            usernameInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+        const confirmPassword =
+            confirmPasswordInput.value;
+
+
+        // Check passwords BEFORE sending request
+        if (password !== confirmPassword) {
+
+            showMessage(
+                "Passwords do not match.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (password.length < 6) {
+
+            showMessage(
+                "Password must contain at least 6 characters.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        registerButton.disabled = true;
+
+        registerButton.textContent =
+            "Creating Account...";
+
+
+        try {
+
+            const response = await fetch(
+                "/api/register",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        confirmPassword: confirmPassword
+                    })
+                }
+            );
+
+
+            const result =
+                await response.json();
+
+
+            if (result.success) {
+
+                showMessage(
+                    "Account created successfully! Redirecting to login...",
+                    "success"
+                );
+
+
+                setTimeout(
+                    function() {
+
+                        window.location.href =
+                            "/login";
+
+                    },
+                    1500
+                );
+
+            } else {
+
+                showMessage(
+                    result.message ||
+                    "Registration failed.",
+                    "error"
+                );
+
+                registerButton.disabled = false;
+
+                registerButton.textContent =
+                    "Create Account";
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Registration error:",
+                error
+            );
+
+            showMessage(
+                "Unable to connect to the server.",
+                "error"
+            );
+
+            registerButton.disabled = false;
+
+            registerButton.textContent =
+                "Create Account";
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+```
