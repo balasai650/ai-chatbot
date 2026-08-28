@@ -16,7 +16,8 @@ A modern web-based AI chatbot built using **Python, Flask, JavaScript, SQLite, a
 * 💾 **Chat History Export** in JSON format
 * 🗑️ **Clear Conversation Memory**
 * 🔐 **User Registration and Login Authentication**
-* 🚪 **User Logout**
+* 🚪 **Secure User Logout**
+* 🔑 **Forgot Password and Password Reset**
 * 📱 **Responsive Web Interface**
 * ⚡ **Typing Indicator** for better user experience
 * 🛡️ **Error Handling and Fallback Responses**
@@ -30,6 +31,7 @@ A modern web-based AI chatbot built using **Python, Flask, JavaScript, SQLite, a
 * Flask-CORS
 * Google Gemini API
 * SQLite
+* Werkzeug Security
 
 ### Frontend
 
@@ -43,6 +45,7 @@ A modern web-based AI chatbot built using **Python, Flask, JavaScript, SQLite, a
 * Git
 * GitHub
 * Python Virtual Environment
+* Render
 
 ## 📁 Project Structure
 
@@ -55,7 +58,6 @@ ai-chatbot/
 ├── test_api.py            # API testing
 ├── README.md              # Project documentation
 ├── .gitignore             # Git ignored files
-├── chatbot.db             # Local SQLite database
 │
 └── static/
     ├── index.html         # Main chatbot interface
@@ -65,7 +67,7 @@ ai-chatbot/
     └── app.js             # Frontend functionality
 ```
 
-> **Note:** `chatbot.db` contains local application data and should not be committed to GitHub if it contains user information.
+> **Note:** `chatbot.db` is created automatically when the application starts and is not required to be included in the repository.
 
 ## ⚙️ Requirements
 
@@ -130,16 +132,18 @@ $env:GEMINI_API_KEY
 
 ## 🔐 User Authentication
 
-The application includes a user authentication system using SQLite.
+The application includes a user authentication system using **Flask sessions, SQLite, and password hashing**.
 
 Users can:
 
 * Create a new account using the registration page
 * Log in using their registered credentials
 * Access the chatbot after successful authentication
-* Log out from the application
+* Maintain separate conversation memory
+* Log out securely
+* Reset their password using the forgot-password option
 
-Authentication helps restrict access to the chatbot and provides user-specific sessions.
+Authentication helps restrict access to the chatbot and keeps user conversation memory associated with the logged-in user.
 
 ## ▶️ Running the Application
 
@@ -172,7 +176,7 @@ The chatbot allows users to:
 
 ## 🧠 Conversation Memory
 
-The backend maintains conversation history during the active session.
+The backend maintains conversation history for each logged-in user.
 
 Example:
 
@@ -185,6 +189,8 @@ User: What is my name?
 
 AI: Your name is Sai.
 ```
+
+The conversation memory is stored in SQLite and associated with the logged-in user's account.
 
 This allows the chatbot to understand follow-up questions and maintain conversational context.
 
@@ -279,6 +285,7 @@ The application includes error handling for:
 * Invalid API responses
 * Missing API configuration
 * Empty user messages
+* Unauthorized access
 * Expired login sessions
 
 Fallback responses are displayed when the AI service is temporarily unavailable.
@@ -290,9 +297,11 @@ The project was tested for:
 * User registration
 * User login
 * User logout
+* Password reset
 * Chat message processing
 * Gemini API communication
 * Conversation memory
+* User-specific memory
 * Name/context recall
 * Intent recognition
 * Sentiment analysis
@@ -303,39 +312,116 @@ The project was tested for:
 * Chat history export
 * Clear conversation functionality
 * API error handling
+* Login protection
+* Deployment functionality
 
 ## 🔐 Security
 
 The application uses authentication to restrict access to the chatbot.
 
+Passwords are stored using secure password hashing rather than plain text.
+
 Sensitive configuration files and development files are excluded from Git using `.gitignore`.
 
-The following files and folders should remain excluded:
+The following files and folders are intentionally not uploaded:
 
 ```text
 venv/
 .env
 __pycache__/
 *.pyc
-chatbot.db
 ```
 
 API keys should always be stored using environment variables rather than directly inside the source code.
 
-> ⚠️ Do not upload API keys, passwords, database files containing user information, or other sensitive data to GitHub.
+> ⚠️ **Do not upload API keys, passwords, or sensitive user information to GitHub.**
+
+## 🌐 Live Deployment
+
+The Dynamic AI Chatbot is deployed as a live web application using **Render**.
+
+### 🚀 Live Demo
+
+**Live Application:**
+
+https://dynamic-ai-chatbot-sai.onrender.com
+
+The deployed application provides:
+
+* 🔐 User Registration and Login
+* 🤖 Gemini AI-powered conversations
+* 🧠 Conversation memory
+* 🎯 Intent recognition
+* 😊 Sentiment analysis
+* 🌐 English, Hindi and Hinglish support
+* 📊 Analytics dashboard
+* ⚙️ Customizable chatbot settings
+* 🔑 Password reset
+* 🚪 Secure logout
+
+### 💻 Source Code
+
+**GitHub Repository:**
+
+https://github.com/balasai650/ai-chatbot
+
+### ☁️ Deployment Platform
+
+The application is deployed using:
+
+* **Hosting:** Render
+* **Backend:** Flask
+* **Runtime:** Python 3
+* **Database:** SQLite
+* **AI Service:** Google Gemini API
+
+### 🔑 Deployment Environment Variables
+
+The following environment variables are configured in the Render deployment environment:
+
+```text
+GEMINI_API_KEY
+FLASK_SECRET_KEY
+```
+
+Sensitive API keys and secret values are not stored in the GitHub repository.
+
+> **Note:** The application uses Render's free instance. The service may automatically spin down after inactivity, so the first request after a period of inactivity may take longer while the server starts again.
+
+## 📸 Project Screenshots
+
+Screenshots of the following application pages can be added to this README:
+
+* Login Page
+* Registration Page
+* Chatbot Interface
+* Analytics Dashboard
+* Settings Panel
+
+Example:
+
+```text
+screenshots/
+├── login.png
+├── register.png
+├── chatbot.png
+├── analytics.png
+└── settings.png
+```
 
 ## 📌 Future Improvements
 
 Possible future enhancements include:
 
-* Persistent database-based conversation storage
+* Persistent database-based conversation storage improvements
 * Voice input and output
 * Advanced NLP-based sentiment analysis
 * Conversation search
-* User-specific chat history
+* User-specific chat history improvements
 * More language options
 * Advanced analytics and reporting
-* Cloud deployment improvements
+* Improved cloud deployment
+* Email-based password recovery
 
 ## 🎓 Project Purpose
 
