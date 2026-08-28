@@ -2,4 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .env
-.env.*
+chatbot.db
+chatbot_backup.db
+server_before_login.py
