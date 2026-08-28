@@ -1,6 +1,6 @@
 # 🤖 Dynamic AI Chatbot
 
-A modern web-based AI chatbot built using **Python, Flask, JavaScript, and Google Gemini API**. The application provides conversational AI with conversation memory, intent recognition, sentiment analysis, multilingual support, customizable settings, and an interactive analytics dashboard.
+A modern web-based AI chatbot built using **Python, Flask, JavaScript, SQLite, and Google Gemini API**. The application provides conversational AI with conversation memory, intent recognition, sentiment analysis, multilingual support, customizable settings, user authentication, and an interactive analytics dashboard.
 
 ## ✨ Features
 
@@ -15,6 +15,8 @@ A modern web-based AI chatbot built using **Python, Flask, JavaScript, and Googl
 * ⚙️ **Customizable Settings**
 * 💾 **Chat History Export** in JSON format
 * 🗑️ **Clear Conversation Memory**
+* 🔐 **User Registration and Login Authentication**
+* 🚪 **User Logout**
 * 📱 **Responsive Web Interface**
 * ⚡ **Typing Indicator** for better user experience
 * 🛡️ **Error Handling and Fallback Responses**
@@ -27,6 +29,7 @@ A modern web-based AI chatbot built using **Python, Flask, JavaScript, and Googl
 * Flask
 * Flask-CORS
 * Google Gemini API
+* SQLite
 
 ### Frontend
 
@@ -52,12 +55,17 @@ ai-chatbot/
 ├── test_api.py            # API testing
 ├── README.md              # Project documentation
 ├── .gitignore             # Git ignored files
+├── chatbot.db             # Local SQLite database
 │
 └── static/
-    ├── index.html         # Chatbot user interface
+    ├── index.html         # Main chatbot interface
+    ├── login.html         # User login page
+    ├── register.html      # User registration page
     ├── style.css          # Application styling
     └── app.js             # Frontend functionality
 ```
+
+> **Note:** `chatbot.db` contains local application data and should not be committed to GitHub if it contains user information.
 
 ## ⚙️ Requirements
 
@@ -118,7 +126,20 @@ Verify the configuration:
 $env:GEMINI_API_KEY
 ```
 
-> ⚠️ Never upload your actual API key to GitHub.
+> ⚠️ **Never upload your actual API key to GitHub.**
+
+## 🔐 User Authentication
+
+The application includes a user authentication system using SQLite.
+
+Users can:
+
+* Create a new account using the registration page
+* Log in using their registered credentials
+* Access the chatbot after successful authentication
+* Log out from the application
+
+Authentication helps restrict access to the chatbot and provides user-specific sessions.
 
 ## ▶️ Running the Application
 
@@ -258,6 +279,7 @@ The application includes error handling for:
 * Invalid API responses
 * Missing API configuration
 * Empty user messages
+* Expired login sessions
 
 Fallback responses are displayed when the AI service is temporarily unavailable.
 
@@ -265,6 +287,9 @@ Fallback responses are displayed when the AI service is temporarily unavailable.
 
 The project was tested for:
 
+* User registration
+* User login
+* User logout
 * Chat message processing
 * Gemini API communication
 * Conversation memory
@@ -281,32 +306,36 @@ The project was tested for:
 
 ## 🔐 Security
 
+The application uses authentication to restrict access to the chatbot.
+
 Sensitive configuration files and development files are excluded from Git using `.gitignore`.
 
-The following files and folders are intentionally not uploaded:
+The following files and folders should remain excluded:
 
 ```text
 venv/
 .env
 __pycache__/
 *.pyc
+chatbot.db
 ```
 
 API keys should always be stored using environment variables rather than directly inside the source code.
+
+> ⚠️ Do not upload API keys, passwords, database files containing user information, or other sensitive data to GitHub.
 
 ## 📌 Future Improvements
 
 Possible future enhancements include:
 
-* User authentication
 * Persistent database-based conversation storage
 * Voice input and output
 * Advanced NLP-based sentiment analysis
 * Conversation search
-* Cloud deployment
 * User-specific chat history
 * More language options
 * Advanced analytics and reporting
+* Cloud deployment improvements
 
 ## 🎓 Project Purpose
 
@@ -314,7 +343,7 @@ This project was developed as an educational AI application to demonstrate the i
 
 **Artificial Intelligence + Natural Language Processing + Web Development + Data Analytics**
 
-It demonstrates how a conversational AI system can be developed using a Flask backend, JavaScript frontend, and a generative AI model.
+It demonstrates how a conversational AI system can be developed using a Flask backend, JavaScript frontend, SQLite database, and a generative AI model.
 
 ## 📄 License
 
