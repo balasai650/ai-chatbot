@@ -388,26 +388,29 @@ Sensitive API keys and secret values are not stored in the GitHub repository.
 
 > **Note:** The application uses Render's free instance. The service may automatically spin down after inactivity, so the first request after a period of inactivity may take longer while the server starts again.
 
+:::writing{variant="standard" id="72846"}
 ## 📸 Project Screenshots
 
-Screenshots of the following application pages can be added to this README:
+### 🔐 Login Page
+![Login Page](Login%20Page.png)
 
-* Login Page
-* Registration Page
-* Chatbot Interface
-* Analytics Dashboard
-* Settings Panel
+### 📝 Registration Page
+![Registration Page](Registration%20page.png)
 
-Example:
+### 💬 Chatbot Interface
+![Chatbot Interface](Chat%20Bot.png)
 
-```text
-screenshots/
-├── login.png
-├── register.png
-├── chatbot.png
-├── analytics.png
-└── settings.png
-```
+### 📊 Analytics Dashboard
+![Analytics Overview](Analytics%20Overview.png)
+
+![Analytics Chart](Analytics%20Chart.png)
+
+### ⚙️ Settings Panel
+![Settings](Settings.png)
+
+### 🌐 Language Settings
+![Language Settings](Language-settings.png)
+:::
 
 ## 📌 Future Improvements
 
